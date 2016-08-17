@@ -1,3 +1,9 @@
+var config = require('./config/config');
+
+var mongoose = require('mongoose');
+mongoose.Promise = global.Promise;
+mongoose.connect(config.db);
+
 //requiring the Movie module
 var Movie = require('./models/movie');
 var Actor = require('./models/actor');
@@ -8,7 +14,7 @@ var express = require('express');
 var app = express();
 
 //set up port
-var port = 5000;
+var port = process.env.PORT || 5000;
 app.set('port', port);
 
 //set all the middlewares

@@ -1,9 +1,7 @@
-var mongo_url = 'mongodb://localhost/mymdb_db';
+//var mongo_url = process.env.MONGODB_URI || 'mongodb://localhost/mymdb_db';
 
 //require mongoose
 var mongoose = require('mongoose');
-mongoose.Promise = global.Promise;
-// mongoose.connect(mongo_url);
 
 //setting up how json structure will be like
 var actorSchema = new mongoose.Schema({
