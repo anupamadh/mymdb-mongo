@@ -1,10 +1,11 @@
 var config = require('./config/config');
-
-var mongoose = require('mongoose');
-mongoose.Promise = global.Promise;
-mongoose.connect(config.db);
+var mongoose = require('./config/mongoose');
+// var mongoose = require('mongoose');
+// mongoose.Promise = global.Promise;
+// mongoose.connect(config.db);
 
 //requiring the Movie module
+var db = mongoose();
 var Movie = require('./models/movie');
 var Actor = require('./models/actor');
 
@@ -85,7 +86,11 @@ app.route('/actors/:actor_id')
   var actor_id = req.params.actor_id;
   Actor.findByIdAndUpdate(actor_id, req.body, function(err, actor) {
     if (err) return next(err);
+    Actor.findOne({_id: actor_id},
+    function(err, actor){
+      if (err) return next(err);
     res.json(actor);
+      })
   });
 })
 .delete(function(req, res) {

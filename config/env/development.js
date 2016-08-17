@@ -1,4 +1,4 @@
 module.exports = {
-  db: 'mongodb://localhost/wdi4',
+  db: 'mongodb://localhost/mymdb_db',
   sessionSecret: 'developmentSessionSecret'
 };
