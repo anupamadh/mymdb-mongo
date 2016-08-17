@@ -82,17 +82,17 @@ app.route('/actors/:actor_id')
     });
   })
 
-.put(function(req, res) {
-  var actor_id = req.params.actor_id;
-  Actor.findByIdAndUpdate(actor_id, req.body, function(err, actor) {
-    if (err) return next(err);
-    Actor.findOne({_id: actor_id},
-    function(err, actor){
-      if (err) return next(err);
-    res.json(actor);
-      })
-  });
-})
+  .put( function(req, res, next) {
+       // console.log(req.body);
+       var actor_id =  req.params.actor_id;
+
+       Actor.findByIdAndUpdate( actor_id, req.body, function(err, actor) {
+         if(err) res.status(400).send(err);
+         Actor.findOne({ _id: actor_id}, function(err, actor) {
+           res.json(actor);
+         });
+       });
+     })
 .delete(function(req, res) {
   var actor_id = req.params.actor_id;
   Actor.findOneAndRemove(actor_id, req.body, function(err, actor) {
