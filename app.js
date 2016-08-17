@@ -3,13 +3,15 @@ var mongoose = require('./config/mongoose');
 // var mongoose = require('mongoose');
 // mongoose.Promise = global.Promise;
 // mongoose.connect(config.db);
-
+var jwt_secret = 'whateversuperduperwho';
 //requiring the Movie module
 var db = mongoose();
 var Movie = require('./models/movie');
 var Actor = require('./models/actor');
-
+var User = require('./models/user');
 var bodyParser = require('body-parser');
+var expressJWT = require('express-jwt');
+var jwt = require('jsonwebtoken');
 //require express module
 var express = require('express');
 var app = express();
@@ -25,9 +27,53 @@ app.use(bodyParser.urlencoded({
   extended: false
 }));
 //let's set the routes to list all the movies
+//express-jwt
+app.use(expressJWT({
+secret: jwt_secret
+})
+.unless({
+  path: ['/signup', '/login']
+})
+);
 
 //list all movies
 console.log(1);
+
+//movie MDB API Models list
+
+
+//signup
+app.post('/signup', function(req, res) {
+
+  //set var for the posted request
+  var user_object = req.body;
+  //set new user object
+  var new_user = new User(user_object);
+  //save the new user object
+  new_user.save(function(err, user) {
+    if (err) return res.status(400).send(err);
+    return res.status(200).send({
+      message: 'user created'
+    });
+  });
+});
+
+
+app.post('/login', function(req, res) {
+
+  var loggedin_user = req.body;
+  User.findOne(loggedin_user, function(err, found_user) {
+    if (err) return res.status(400).send('invalid username and password');
+    if (found_user) {
+      var payload = found_user.id;
+      var jwt_token = jwt.sign(payload, jwt_secret);
+      return res.status(200).send(jwt_token);
+    } else {
+      return res.status(400).send({
+        message: 'login failed'})
+    }
+  });
+})
 
 app.route('/movies/:movie_id')
   .get(function(req, res, next) {
@@ -72,34 +118,43 @@ app.route('/movies')
 
 
 app.route('/actors/:actor_id')
+  // .get(function(req, res, next) {
+  //   var actor_id = req.params.actor_id;
+  //   Actor.findOne({
+  //     _id: actor_id
+  //   }, function(err, actor) {
+  //     if (err) return next(err);
+  //     res.json(actor);
+  //   });
+  // })
   .get(function(req, res, next) {
-    var actor_id = req.params.actor_id;
-    Actor.findOne({
-      _id: actor_id
-    }, function(err, actor) {
+    var actor_name = req.params.actor_id;
+    Actor.find().byName(actor_name).exec(function(err, actor) {
       if (err) return next(err);
       res.json(actor);
     });
   })
 
-  .put( function(req, res, next) {
-       // console.log(req.body);
-       var actor_id =  req.params.actor_id;
+.put(function(req, res, next) {
+    // console.log(req.body);
+    var actor_id = req.params.actor_id;
 
-       Actor.findByIdAndUpdate( actor_id, req.body, function(err, actor) {
-         if(err) res.status(400).send(err);
-         Actor.findOne({ _id: actor_id}, function(err, actor) {
-           res.json(actor);
-         });
-       });
-     })
-.delete(function(req, res) {
-  var actor_id = req.params.actor_id;
-  Actor.findOneAndRemove(actor_id, req.body, function(err, actor) {
-    if (err) return next(err);
-    res.json(actor);
+    Actor.findByIdAndUpdate(actor_id, req.body, function(err, actor) {
+      if (err) res.status(400).send(err);
+      Actor.findOne({
+        _id: actor_id
+      }, function(err, actor) {
+        res.json(actor);
+      });
+    });
+  })
+  .delete(function(req, res) {
+    var actor_id = req.params.actor_id;
+    Actor.findOneAndRemove(actor_id, req.body, function(err, actor) {
+      if (err) return next(err);
+      res.json(actor);
+    });
   });
-});
 
 app.route('/actors')
   .get(function(req, res) {
@@ -108,12 +163,16 @@ app.route('/actors')
       res.json(actors);
     });
   })
-  .post(function(req, res) {
-    console.log(req.body);
+  .post(function(req, res, next) {
     var new_actor = new Actor(req.body);
-    console.log(new_actor);
     new_actor.save(function(err) {
-      if (err) return next(err);
+      // if(err) return next(err);
+      var err_message = {
+        "message": err.errors.email.message,
+        "status_code": 400
+      };
+      // console.log('error message is: ', err.errors.email.message);
+      if (err) return res.status(400).send(err_message.message);
       res.json(new_actor);
     });
   });
